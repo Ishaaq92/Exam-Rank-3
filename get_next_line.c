@@ -6,7 +6,7 @@
 /*   By: ishaaq <ishaaq@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/03 14:30:39 by ishaaq            #+#    #+#             */
-/*   Updated: 2025/06/05 15:45:37 by ishaaq           ###   ########.fr       */
+/*   Updated: 2025/06/05 16:08:42 by ishaaq           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,9 +156,16 @@ char	*check_remaining_bytes_nl(char *line)
 	return (new);
 }
 
-void	readline(void)
+char	*halt(char *line)
 {
+	char	*new;
 	
+	if (!line || !(*line))
+		return (NULL);
+	new = ft_strndup(line, ft_strlen(line));
+	// free(line);
+	line[0] = '\0';
+	return (new);
 }
 
 char    *get_next_line(int fd)
@@ -171,12 +178,11 @@ char    *get_next_line(int fd)
 		return (NULL);
 	if (line && ft_strchr(line, '\n'))
 		return (check_remaining_bytes_nl(line));
-	readline();
 	while (42)
 	{
 		num_bytes = read(fd, buffer, BUFFER_SIZE);
 		if (!num_bytes)
-			return (line);
+			return (halt(line));
 		buffer[num_bytes] = '\0';
 		if (ft_strchr(buffer, '\n'))
 			return (append_characters_nl(line, buffer, ft_strnchr(buffer, '\n')));
@@ -197,7 +203,7 @@ int main(int ac, char **av)
 		fd = open("file.txt", O_RDONLY);
 	line = get_next_line(fd);
 	// printf("%s", line);
-	while (line)
+	while (line != NULL)
 	{
 		printf("%s", line);
 		line = get_next_line(fd);
