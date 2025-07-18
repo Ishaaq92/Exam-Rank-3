@@ -1,144 +1,157 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ishaaq <ishaaq@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/03 14:30:39 by ishaaq            #+#    #+#             */
-/*   Updated: 2025/06/09 21:07:43 by ishaaq           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "get_next_line.h"
 
-
-void	shift_bytes_line(char *line)
+int	ft_strlen(char *s)
 {
-	char	*start;
+	int	i;
 
-	start = ft_strchr(line, '\n');
-	free(line);
-	if (ft_strchr(start, '\n') != 0)
-		line = ft_strndup(start, ft_strnchr(start, '\n'));
-	else
-		line = ft_strchr(start, ft_strlen(start));
+	i = 0;
+	while (s[i] != '\0')
+		i++;
+	return (i);
 }
 
-void	shift_bytes_buffer(char *line, char *buffer)
+char	*ft_strchr(char *s, char c)
 {
-	if (line)
-		free(line);
-	line = ft_strndup(ft_strchr(buffer, '\n') + 1, ft_strlen(ft_strchr(buffer, '\n') + 1));
+	int	i;
+
+	i = 0;
+	while (s[i] != '\0' && s[i] != c)
+		i ++;
+	if (s[i] == c)
+		return (&s[i]);
+	return (NULL);
 }
 
-// Just appends the full num_bytes number of characters and gets returned. 
-char	*append_characters(char *line, char *buffer, int num_bytes)
+int	ft_strnchr(char *s, char c)
+{
+	int	i;
+
+	i = 0;
+	while (s[i] != '\0' && s[i] != c)
+		i ++;
+	if (s[i] == c)
+		return (i + 1);
+	return (-1);
+}
+
+char	*ft_strndup(char *s, int n)
+{
+	int		i;
+	char	*new;
+
+	i = -1;
+	new = malloc(sizeof(char) * (ft_strlen(s) + 1));
+	while (s[++i] != '\0' && (i < n || n == -1))
+		new[i] = s[i];
+	new[i] = '\0';
+	return (new);
+}
+
+char	*ft_strjoin(char *s1, char *s2)
 {
 	char	*new;
-	char	*tmp;
+	int		s1_len;
+	int		s2_len;
+	int		i;
 
-	printf("not nl");
-	if (!line)
+	if (!s1 && (!s2 || !*s2))
+		return ( NULL);
+	else if (!s1)
+		return (ft_strndup(s2, -1));
+	else if (!s2)
+		return (ft_strndup(s1, -1));
+	s1_len = ft_strlen(s1);
+	s2_len = ft_strlen(s2);
+	i = -1;
+	new = malloc(sizeof(char) * (s1_len + s2_len + 1));
+	while (s1[++i] != '\0')
+		new[i] = s1[i];
+	i = -1;
+	while (s2[++i] != '\0')
+		new[s1_len + i] = s2[i];
+	new[s1_len + i] = '\0';
+	return (new);
+}
+
+char	*append_with_nl(char *line, char *b)
+{
+	char	*tmp;
+	char	*new;
+
+	tmp = ft_strndup(b, ft_strnchr(b, '\n'));
+	new = ft_strjoin(line, tmp);
+	free(tmp);
+	free(line);
+	return (new);
+}
+
+void	reset_buffer(char *b)
+{
+	int		i;
+	char	*tmp;
+	
+	if (!b)
+		return ;
+	i = -1;
+	tmp = ft_strchr(b, '\n') + 1;
+ 	while (tmp[++i] != '\0')
+		b[i] = tmp[i];
+	b[i] = '\0';
+}
+
+char	*get_next_line(int fd)
+{
+	static char	b[BUFFER_SIZE + 1];
+	char		*line;
+	int			num_read;
+	
+	line = NULL;
+	// printf("b = %s\n", b);
+	if (!ft_strchr(b, '\n'))
+		line = ft_strjoin(line, b);
+	else if (ft_strchr(b, '\n'))
 	{
-		line = ft_strndup(buffer, num_bytes);
-		// printf("debugging = %s", new);
+		line = append_with_nl(line, b);
+		reset_buffer(b);
+		// printf("%s", line);
 		return (line);
 	}
-	tmp = ft_strndup(buffer, num_bytes);
-	printf("tmp = %s", tmp);
-	new = ft_strjoin(line, tmp);
-	if (tmp)
-		free(tmp);
-	printf("debugging = %s\n", new);
-	return (new);
-}
-
-// Getting returned
-char	*append_characters_nl(char *line, char *buffer, int bytes)
-{
-	char	*temp;
-	char	*new;
-
-	if (!(line))
+	while ((num_read = read(fd, b, BUFFER_SIZE)) && num_read > 0)
 	{
-		new = ft_strndup(buffer, bytes + 1);
-		shift_bytes_buffer(line, buffer);
-		return (new);
-	}
-	temp = ft_strndup(buffer, bytes + 1);
-	new = ft_strjoin(line, temp);
-	if (temp)
-		free(temp);
-	shift_bytes_buffer(line, buffer);
-	return (new);
-}
-
-char	*check_remaining_bytes_nl(char *line)
-{
-	char	*new;
-
-	if (!line || ft_strchr(line, '\n') == NULL)
-		return (NULL);
-	new = ft_strndup(line, ft_strnchr(line, '\n') + 1);
-	shift_bytes_line(line);
-	return (new);
-}
-
-char	*halt(char *line)
-{
-	char	*new;
-	
-	if (!line || !(*line))
-		return (NULL);
-	new = ft_strndup(line, ft_strlen(line));
-	// free(line);
-	line[0] = '\0';
-	return (new);
-}
-
-char    *get_next_line(int fd)
-{
-	char		buffer[BUFFER_SIZE + 1];
-	int			num_bytes;
-	static char	*line;
-
-	if (fd < 0)
-		return (NULL);
-	if (line && ft_strchr(line, '\n'))
-		return (check_remaining_bytes_nl(line));
-	printf("here\n");
-	while (42)
-	{
-		num_bytes = read(fd, buffer, BUFFER_SIZE);
-		if (!num_bytes)
-			return (halt(line));
-		buffer[num_bytes] = '\0';
-		printf("%d, %s\n", num_bytes, buffer);
-		if (ft_strchr(buffer, '\n'))
-			return (append_characters_nl(line, buffer, ft_strnchr(buffer, '\n')));
+		b[num_read] = '\0';
+		if (ft_strchr(b, '\n'))
+		{
+			line = append_with_nl(line, b);
+			reset_buffer((char *)b);
+			break ;
+		}
 		else
-			line = append_characters(line, buffer, num_bytes);
+			line = ft_strjoin(line, b);
 	}
+	// printf("%s", line);
 	return (line);
 }
 
-int main(int ac, char **av)
+int	main(void)
 {
-	int 	fd;
-	char	*line;
+	int		fd;
+	char	*s;
 
-	(void) ac;	
-	if (!access(av[1], O_RDONLY))
-		fd = open(av[1], O_RDONLY);
-	else
-		fd = open("file.txt", O_RDONLY);
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	// line = get_next_line(fd);
-	// while (line != NULL)
-	// {
-	// 	printf("%s", line);
-	// 	line = get_next_line(fd);
-	// }
+	fd = open("file.txt", 0);
+	/*
+	get_next_line(fd);
+	printf("------------\n");
+	get_next_line(fd);
+	printf("------------\n");
+	get_next_line(fd);
+	printf("------------\n");
+	get_next_line(fd);
+	printf("------------\n");
+	get_next_line(fd);
+	*/
+	while ((s = get_next_line(fd)) && s != NULL)
+	{
+		printf("%s", s);
+		free(s);
+	}
 }
