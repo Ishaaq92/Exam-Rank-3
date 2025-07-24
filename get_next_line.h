@@ -11,5 +11,10 @@
 # include <fcntl.h>
 
 char	*get_next_line(int fd);
+int		ft_strlen(char *s);
+char	*ft_strchr(char *s, char c);
+int		ft_strnchr(char *s, char c);
+char	*ft_strndup(char *s, int n);
+void	reset_buffer(char *b);
 
 #endif
